@@ -10,37 +10,39 @@
 </head>
 <body>
   
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
-       <b> <a class="navbar-brand">My Box</a></b>
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-          <span class="navbar-toggler-icon"></span>
-        </button>
-      
-        <div class="collapse navbar-collapse" id="navbarSupportedContent">
-          <ul class="navbar-nav ml-auto">
-            <li class="nav-item">
-              <b><a class="nav-link" href="#">
-                  {{ user.email }} 
-              </b></a>
-            </li>
-              <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-                <a class="dropdown-item" href="#">Action</a>
-                <a class="dropdown-item" href="#">Another action</a>
-                <div class="dropdown-divider"></div>
-                <a class="dropdown-item" href="#">Something else here</a>
-              </div>
-          <form class="form-inline my-2 my-lg-0">
-          <class class="btn btn-outline-success my-2 my-sm-0" type="submit">
-              <a href="/logout">Logout</a>
-              </class>
-          </button>
-          </form>
-        </div>
-      </nav>
+    <!--Navbar -->
+  <nav class="navbar navbar-expand-lg" style="background-color: #00bfff;">
+    <a class="navbar-brand" style="color: black"><b>My Box</b></a>
+     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+       <span class="navbar-toggler-icon"></span>
+     </button>
+   
+     <div class="collapse navbar-collapse" id="navbarSupportedContent">
+       <ul class="navbar-nav ml-auto">
+         <li class="nav-item">
+           <b><a class="nav-link" href="#" style="color: black">
+               {{ user.email }} 
+           </b></a>
+         </li>
+           <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+             <a class="dropdown-item" href="#">Action</a>
+             <a class="dropdown-item" href="#">Another action</a>
+             <div class="dropdown-divider"></div>
+             <a class="dropdown-item" href="#">Something else here</a>
+           </div>
+       <form class="form-inline my-2 my-lg-0">
+       <class class="btn btn-success" type="submit">
+           <a href="/logout" style="color: white">Logout</a>
+           </class>
+       </button>
+       </form>
+     </div>
+   </nav>
+<!--/.Navbar -->
 <br>
 
 <div class="content" >
-    <div class="row mt-4" style ="width: 96%">
+    <div class="row mt-5" style ="width: 96%">
         <div class="col" >
            <h5> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
              Uploaded Files</h5>
@@ -100,13 +102,13 @@
         <thead class="thead-light">
           <tr>
             <th scope="col" style ="width: 40%">File Name</th>
-            <th scope="col" style ="width: 20%">Size</th>
-            <th scope="col" style ="width: 25%">Uploaded</th>
+            <th scope="col" style ="width: 20%">File Size</th>
+            <th scope="col" style ="width: 25%">Uploaded Date & Time</th>
             <th scope="col"></th>
           </tr>
         </thead>
         <tbody>
-            {% for f in uploaded_files %}
+            {% for f in uploaded_files  %}
           <tr>
             <td>
                 {{ f['originalFileName'] }}

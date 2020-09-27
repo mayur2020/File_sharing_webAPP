@@ -24,7 +24,7 @@ mongo=PyMongo(app)
 @app.route('/')
 def login():
     if not 'userToken' in session:
-        session['error']='You Must Login To Access Homepage...!'
+        session['error']='Must Login To Access Homepage'
         return redirect('/login')
 
     token_doc = mongo.db.User_Tokens.find_one({
@@ -52,7 +52,7 @@ def login():
     })
 
     uploaded_files = mongo.db.Files.find({
-        'userId': userId,
+        'user_Id': userId,
         'isActive': True
     }).sort([("createdAt", pymongo.DESCENDING)])
 
@@ -73,7 +73,6 @@ def show_signup():
     return render_template('signup.html' ,error=error)
 
 
-
 @app.route('/login')
 def signup():
     error=''
@@ -85,7 +84,7 @@ def signup():
     if 'signupSuccess' in session:
         signupSuccess = session['signupSuccess']
         session.pop('signupSuccess',None)   
-    return render_template('login.html' ,error=error,signupSuccess=signupSuccess)
+    return render_template('login.html',error=error,signupSuccess=signupSuccess)
 
 
 
@@ -95,7 +94,7 @@ def check_login():
     email = request.form['email']
     password = request.form['password']  
     if not len(email) > 0:
-        session['error'] = 'Please enter email'
+        session['error'] = 'Please Enter Email'
         return redirect('/login')
 
     if not '@' in email or not '.' in email:
@@ -182,7 +181,7 @@ def logout():
 
 
 def allowed_file(filename):
-    ALLOWED_EXTENSION = ['jpg','jpeg','png','gif']
+    ALLOWED_EXTENSION = ['jpg','jpeg','png','gif','doc','docx','xls','xlsx','ppt','pptx','pdf','csv']
     return '.' in filename and \
         filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSION
 
@@ -190,7 +189,7 @@ def allowed_file(filename):
 @app.route('/handle_file_upload', methods=['POST'])
 def handle_file():
     if not 'userToken' in session:
-        session['error']='You Must Login To Access Homepage...!'
+        session['error']='Must Login To Access Homepage'
         return redirect('/login')
 
     token_doc = mongo.db.User_Tokens.find_one({
@@ -203,6 +202,10 @@ def handle_file():
     
     file = request.files['uploadedFile']
 
+    if file.filename == '':
+        session['error']='Please select the file'
+        return redirect('/')
+
     if not allowed_file(file.filename):
         session['error']='File type not allowed'
         return redirect('/')
@@ -210,10 +213,6 @@ def handle_file():
 
     if 'uploadedFile' not in request.files:
         session['error']='No file uploaded by the user'
-        return redirect('/')
-
-    if file.filename == '':
-        session['error']='No selected file'
         return redirect('/')
 
 
