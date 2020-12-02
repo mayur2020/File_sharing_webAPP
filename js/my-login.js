@@ -69,4 +69,9 @@ $(function() {
         }
 		form.addClass('was-validated');
 	});
+
+	$('.btn-share-file').on('click',function(){
+		$('shareModal').modal()
+		console.lon("modal has shwn")
+	})
 });

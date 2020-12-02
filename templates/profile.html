@@ -7,12 +7,24 @@
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  <link rel="stylesheet" href="/css/my-login.css"></link>
+  <style>
+    .footer {
+       position: fixed;
+       left: 0;
+       bottom: 0;
+       width: 100%;
+       background-color: #00bfff;
+       color: rgb(7, 7, 7);
+       text-align: center;
+    }
+    </style>
 </head>
 <body>
   
     <!--Navbar -->
   <nav class="navbar navbar-expand-lg" style="background-color: #00bfff;">
-    <a class="navbar-brand" style="color: black"><b>My Box</b></a>
+    <a class="navbar-brand" style="color: black; font-size: 26px;"><b>My Drive</b></a>
      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
        <span class="navbar-toggler-icon"></span>
      </button>
@@ -20,9 +32,9 @@
      <div class="collapse navbar-collapse" id="navbarSupportedContent">
        <ul class="navbar-nav ml-auto">
          <li class="nav-item">
-           <b><a class="nav-link" href="#" style="color: black">
-               {{ user.email }} 
-           </b></a>
+         <a class="nav-link" href="#" style="color: black; font-size: 16px;">
+          <b><i>Welcome!</b></i> {{ user.email }} 
+           
          </li>
            <div class="dropdown-menu" aria-labelledby="navbarDropdown">
              <a class="dropdown-item" href="#">Action</a>
@@ -31,7 +43,7 @@
              <a class="dropdown-item" href="#">Something else here</a>
            </div>
        <form class="form-inline my-2 my-lg-0">
-       <class class="btn btn-success" type="submit">
+       <class class="btn btn-danger" type="submit">
            <a href="/logout" style="color: white">Logout</a>
            </class>
        </button>
@@ -39,13 +51,13 @@
      </div>
    </nav>
 <!--/.Navbar -->
-<br>
+<br><br>
 
 <div class="content" >
-    <div class="row mt-5" style ="width: 96%">
+    <div class="row mt-4" style ="width: 96%">
         <div class="col" >
-           <h5> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
-             Uploaded Files</h5>
+        <h5 style="color: black; font-size: 21px;"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+             <b>Uploaded Files</b></h5>
         </div>
 
         <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#uploadModal">
@@ -84,32 +96,38 @@
           </div>
         </div>
     </div>
-              
-              {% if signupSuccess != '' %} 
-                  <div class="mt-2 alert alert-success" role="alert">
-                        {{ signupSuccess }}
-                  </div>
-              {% endif %}
+            
+        {% if info != '' %} 
+        <div class="alert alert-info" role="alert" style="text-align: center; width:90%; margin-left: 5%;">
+            <strong>Info! </strong>{{ info }}   
+        </div>
+        {% endif %}
 
-              {% if error != '' %} 
-								  <div class="mt-2 alert alert-danger" role="alert">
-									    {{ error }}
-							  	</div>
-              {% endif %}
+        {% if signupSuccess != '' %} 
+        <div class="mt-3 alert alert-success" role="alert" style="text-align: center; width:90%; margin-left: 5%;">
+              <strong>Success! </strong>{{ signupSuccess }}
+        </div>
+        {% endif %}
+  
+        {% if error != '' %} 
+        <div class="mt-2 alert alert-danger" role="alert" style="text-align: center; width:90%; margin-left: 5%;">
+            <strong>Error! </strong>{{ error }}   
+        </div>
+        {% endif %}
 
-    <table class="mt-4">
-    <table class="table table-bordered" align="center" style ="width: 90%">
+    <table class="mt-4" fixed>
+    <table class="table table-bordered" align="center" style ="width: 90%; color: black; font-size: 16px;">
         <thead class="thead-light">
-          <tr>
-            <th scope="col" style ="width: 40%">File Name</th>
-            <th scope="col" style ="width: 20%">File Size</th>
+          <tr align="center">
+            <th scope="col" style ="width: 30%">File Name</th>
+            <th scope="col" style ="width: 15%">File Size</th>
             <th scope="col" style ="width: 25%">Uploaded Date & Time</th>
-            <th scope="col"></th>
+            <th scope="col" style ="width: 40%">Options</th>
           </tr>
         </thead>
         <tbody>
             {% for f in uploaded_files  %}
-          <tr>
+          <tr align= "center">
             <td>
                 {{ f['originalFileName'] }}
             </td>
@@ -120,8 +138,19 @@
                 {{ f['createdAt'] }}
             </td>
             <td>
-                <button type="button" class="btn btn-info">Share</button>
-                <button type="button" class="btn btn-danger">Delete</button>
+                <button type="button" class="btn btn-info">
+                  <a href="share/{{f['_id']}}/{{f['originalFileName']}}" style="color:white">Share</a>
+                </button>  &nbsp;   &nbsp;
+                
+              
+                <button type="button" class="btn btn-success" >
+                  <a href="download_file/{{f['_id']}}" target='_blank' style="color:white">Download</a>
+                </button>
+  
+                  &nbsp;&nbsp; 
+                <button type="button" class="btn btn-danger">
+                    <a href="delete/{{f['originalFileName']}}" style="color:white">Delete</a>
+                </button>
             </td>
           </tr>
           {% endfor %}
@@ -129,6 +158,8 @@
       </table>
 </div>
 </div>
-
+  <div class="footer">
+    <p>© 2020 Copyright: SSM Pvt. Ltd. </p>
+  </div>
 </body>
 </html>

@@ -1,9 +1,10 @@
-from flask import Flask,abort,render_template,url_for, request, session, redirect,session
+from flask import Flask,abort,render_template,url_for, request,send_file, abort, session, redirect,session
 from flask_pymongo import PyMongo
 import json
 from datetime import datetime
 from hashlib import sha256
 import string
+import hashlib
 import random
 from numpy.ma.core import size
 import requests
@@ -11,8 +12,25 @@ import pymongo
 from boto import file, file
 import os
 from flask.debughelpers import DebugFilesKeyError
-
-
+from fileinput import filename
+import smtplib
+import urllib.request
+import webbrowser
+from pathlib import Path
+from datetime import datetime
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from email.mime.base import MIMEBase
+from email import encoders
+from os import path
+from bson import ObjectId
+from pathlib import Path
+import smtplib 
+from email.mime.multipart import MIMEMultipart 
+from email.mime.text import MIMEText 
+from email.mime.base import MIMEBase 
+from email import encoders 
 
 app = Flask(__name__)
 
@@ -45,6 +63,11 @@ def login():
         signupSuccess = session['signupSuccess']
         session.pop('signupSuccess',None)
 
+    info=''
+    if 'info' in session:
+        info = session['info']
+        session.pop('info',None)
+
     userId = token_doc['userId']
 
     user = mongo.db.users.find_one({
@@ -56,8 +79,8 @@ def login():
         'isActive': True
     }).sort([("createdAt", pymongo.DESCENDING)])
 
+    return render_template('/profile.html',uploaded_files=uploaded_files,user=user,error=error,signupSuccess=signupSuccess,info=info)
 
-    return render_template('/profile.html',uploaded_files=uploaded_files,user=user,error=error,signupSuccess=signupSuccess)
     
 @app.route('/home')
 def home():
@@ -130,9 +153,6 @@ def check_login():
     session['userToken'] = randomSessionHash
     return redirect('/')
 
-
-
-
 @app.route('/handle_signup',methods=['POST'])
 def handle_signup():
     email = request.form.get('email')
@@ -162,14 +182,15 @@ def handle_signup():
 
     password = sha256(password.encode('utf-8')).hexdigest()
     cpassword = sha256(cpassword.encode('utf-8')).hexdigest()
+    now = datetime.now()
     result = mongo.db.users.insert_one({
         'email': email,
         'password': password,
         'cpassword': cpassword,
-        'name': '',
+        'name': email,
         'lastLoginDate': None,
-        'createdAt': datetime.utcnow(),
-        'updatedAt': datetime.utcnow(),
+        'createdAt': now.strftime("%d/%m/%Y  %H:%M:%S"),
+        'updatedAt': now.strftime("%d/%m/%Y  %H:%M:%S"),
     })   
     session['signupSuccess']='Your account is ready to login'
     return redirect('/login')
@@ -177,6 +198,14 @@ def handle_signup():
 
 @app.route('/logout')
 def logout():
+    token = session['userToken'] 
+    print(token)
+    us = mongo.db.User_Tokens.remove({
+        'sessionHash': token
+    })
+    if us:
+        print("success")
+
     return redirect('/login')
 
 
@@ -216,25 +245,151 @@ def handle_file():
         return redirect('/')
 
 
-    filename = secure_filename = (file.filename)
+    filename = (file.filename)
     file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
 
-    filepath = file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+    filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+   
+    print(filepath)
     extension = filename.rsplit('.', 1)[1].lower()
     userId = token_doc['userId']
-    result = mongo.db.Files.insert_one({
+    now = datetime.now()
+    ss=os.path.getsize(filepath)
+    print(ss)
+    if ss < 1024*1024 :
+        size_kb = str(ss/1024)
+        size = str(size_kb[:3])+ ' ' + 'KB'    
+    else:
+        size_mb= str(ss/1024/1024)
+        size=str(size_mb[:3]) +' '+ 'MB'
+
+ 
+    hasher = hashlib.md5()
+    with open(filepath, 'rb') as afile:
+        buf = afile.read()
+        hasher.update(buf)
+    filehash=hasher.hexdigest()      
+        
+
+    try:
+        result = mongo.db.Files.insert_one({
         'user_Id': userId,
         'originalFileName': file.filename,
         'fileType': extension,
-        'fileSize': 0,
-        'fileHash': 0,
+        'fileSize': size,
+        'fileHash': filehash,
         'filePath': filepath,
         'isActive': True,
-        'createdAt': datetime.utcnow(),
+        'createdAt': now.strftime("%d/%m/%Y  %H:%M:%S"),
     })
-    session['signupSuccess']='Your file is uploaded successfully...!'
+    except:
+        session['error']='Something went wrong...!'
+    session['signupSuccess']='Your file uploaded successfully...!'
     return redirect('/')
 
+
+@app.route('/share/<_id>/<originalFileName>', methods=["GET"])
+def Sharing(_id,originalFileName):
+    if not 'userToken' in session:
+        session['error']='Must Login To Access Homepage'
+        return redirect('/login')
+
+    token_doc = mongo.db.User_Tokens.find_one({
+        'sessionHash': session['userToken'],
+    })
+    if token_doc is None:
+        session.pop('userToken',None)
+        session['error']='invalid token or you must have to login'
+        return redirect('/login')
+        
+    if not 'userToken' in session:
+        session['error']='Must Login To Access Homepage'
+        return redirect('/login')
+
+    info=''
+    if 'info' in session:
+        info = session['info']
+        session.pop('info',None)
+
+
+    fromaddr = 'mayur137137@gmail.com'
+    toaddr = 'mayur.mane18@vit.edu' 
+    msg = MIMEMultipart() 
+
+    msg['From'] = fromaddr  
+    msg['To'] = toaddr 
+ 
+    msg['Subject'] = "Document" 
+    body = "I'm sharing some document's with please go throgh that"
+
+    msg.attach(MIMEText(body, 'plain'))  
+    filename = originalFileName
+    attachment = open("uploads/"+ filename , "rb") 
+    p = MIMEBase('application', 'octet-stream') 
+    
+    p.set_payload((attachment).read()) 
+    encoders.encode_base64(p) 
+
+    p.add_header('Content-Disposition', "attachment; filename= %s" % filename)  
+    msg.attach(p) 
+ 
+    s = smtplib.SMTP('smtp.gmail.com', 587) 
+    s.starttls() 
+ 
+    s.login(fromaddr, "Mayur@1234567890") 
+
+    text = msg.as_string()  
+    s.sendmail(fromaddr, toaddr, text) 
+ 
+    s.quit()
+
+    session['info']='Mail Send successfully...!' 
+    return redirect('/')
+
+
+
+@app.route('/download_file/<_id>', methods=["GET"])
+def downloadFile(_id):
+    if not 'userToken' in session:
+        session['error']='Must Login To Access Homepage'
+        return redirect('/login')
+
+    token_doc = mongo.db.User_Tokens.find_one({
+        'sessionHash': session['userToken'],
+        })
+    if token_doc is None:
+        session.pop('userToken',None)
+        session['error']='invalid token or you must have to login'
+        return redirect('/login')
+
+    file_object = mongo.db.Files.find_one({
+        '_id': ObjectId(_id)
+    })
+
+    if file_object is None:
+        return abort(404)
+    
+    userId = token_doc['userId']
+    mongo.db.File_Downloads.insert_one({
+        'fileId': file_object['_id'],
+         'userId': userId,
+         'createdAt': datetime.now()
+    })
+    filepath = file_object['filePath']
+    return send_file(filepath, as_attachment=True)
+    return redirect('/')
+
+@app.route('/delete/<originalFileName>', methods=['GET','POST'])
+def deleteFile(originalFileName):
+    file_name=originalFileName
+    delete_file = mongo.db.Files.remove({
+        'originalFileName': file_name
+    })
+    if delete_file:
+        session['info']='Your File Deleted successfully...!'
+    else:
+        session['error']= 'File Not deleted...!'
+    return redirect('/')
 
 if __name__ == '__main__':
     app.run()

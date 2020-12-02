@@ -62,4 +62,10 @@ body.my-login-page {
 	.my-login-page .card.fat .card-body {
 		padding: 15px;
 	}
+
+.share-link{
+	border: 2px dotted #777 ;
+	background: #DEDEDE;
+	padding: 5px;
+}
 }
